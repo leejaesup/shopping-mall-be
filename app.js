@@ -2,14 +2,15 @@ const express =require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-// const indexRouter = require('./routes/index');
+const indexRouter = require('./routes/index');
 require('dotenv').config();
 
 const app = express();
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(bodyParser.json());
 app.use(cors());
-// app.use("/api", indexRouter);
+
+app.use("/api", indexRouter);
 
 const mongoURI = process.env.LOCAL_DB_ADDRESS;
 mongoose.connect(mongoURI, {useNewUrlParser:true})
