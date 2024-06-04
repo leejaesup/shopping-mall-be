@@ -1,7 +1,4 @@
-const User = require("../model/User");
-const bcrypt = require('bcryptjs');
 const Product = require("../model/Product");
-const saltRounds = 10;
 
 const productController = {};
 
@@ -21,17 +18,11 @@ productController.createProduct = async (req, res) => {
 }
 
 //유저정보 가져오기
-productController.getUser = async (req, res) => {
+productController.getProduct = async (req, res) => {
     try {
-        const {userId} = req; //req.userId;
-        const user = await User.findById(userId);
-
-        if (!user) {
-            throw  new Error("can not found User");
-        }
-
+        const products = await Product.find({});
         //200 Ok
-        res.status(200).json({status: "success", user});
+        res.status(200).json({status: "success", data: products});
     } catch (error) {
         //400 Bad Request
         res.status(400).json({status: "fail", message: error.message});
