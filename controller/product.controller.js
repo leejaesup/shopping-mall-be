@@ -23,16 +23,13 @@ productController.getProduct = async (req, res) => {
     try {
         const {page, name} = req.query;
 
-        // let productList;
-        // if (name) {
-        //     productList = await Product.find({name: {$regex:name, $option:"i"}});
-        // } else {
-        //     productList = await Product.find({});
-        // }
-        // const condition = name ? {name: {$regex: name, $options: "i"}} : {};
-        const condition = name
-            ? {name: {$regex: name, $options: "i" }, isDeleted: false}
-            : {isDeleted: false};
+        // const condition = name
+        //     ? {name: {$regex: name, $options: "i" }, isDeleted: false}
+        //     : {isDeleted: false};
+        const condition = {
+            ...(name && { name: { $regex: name, $options: "i" } }),
+            isDeleted: false,
+        };
         let query = Product.find(condition);
         let response = {state: "success"};
 
@@ -52,7 +49,7 @@ productController.getProduct = async (req, res) => {
         res.status(200).json(response);
     } catch (error) {
         //400 Bad Request
-        res.status(400).json({status: "fail", message: error.message});
+        return res.status(400).json({status: "fail", message: error.message});
     }
 }
 
@@ -60,10 +57,11 @@ productController.getProduct = async (req, res) => {
 productController.getProductById = async (req, res) => {
     try {
         const productId = req.params.id;
-        const product = await Product.findById(productId);
+        // const product = await Product.findById(productId);
+        const product = await Product.findById({_id: productId});
 
-        console.log("productId = ", productId);
-        console.log("product = ", product);
+        // console.log("productId = ", productId);
+        // console.log("product = ", product);
 
         if (!product) {
             throw new Error("상품을 찾을 수 없습니다.")
@@ -119,6 +117,38 @@ productController.deleteProduct = async (req, res) => {
         //400 Bad Request
         res.status(400).json({status: "fail", message: error.message});
     }
+}
+
+productController.checkStock = async (item) => {
+    // 실제 아이템 재고 정보 가져오기
+    const product = await Product.findById(item.productId);
+    //qty, 재고비교
+    if (product.stock[item.size] < item.qty) {
+        return {isVerify: false, message: `${product.name}의 ${item.size} 재고가 부족합니다.` }
+    }
+
+    const newStock = {...product.stock};
+    newStock[item.size] -= item.qty;
+    product.stock = newStock;
+
+    await product.save();
+    return {isVerify: true};
+}
+
+productController.checkItemListStock = async (itemList) => {
+    const insufficientStockItems = [] //재고가 불충분한 아이템을 저장할 예정
+    //재고 확인
+    await Promise.all(
+        itemList.map(async item => {
+            const stockCheck = await productController.checkStock(item);
+            if (!stockCheck.isVerify) {
+                insufficientStockItems.push({item, message: stockCheck.message});
+            }
+            return stockCheck;
+        })
+    );
+
+    return insufficientStockItems;
 }
 
 module.exports = productController;
