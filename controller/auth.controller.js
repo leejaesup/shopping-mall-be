@@ -48,7 +48,6 @@ authController.loginWithGoogle = async (req, res) => {
 
         // 존재하는 계정인지 확인
         let user = await User.findOne({email});
-        console.log("user = ", user);
 
         if (!user) {
             // 유저를 새로 생성
@@ -102,7 +101,7 @@ authController.checkAdminPermission = async (req, res, next) => {
         const {userId} = req;
 
         const user = await User.findById(userId);
-        console.log(user)
+
         if (user.level !== "admin") {
             throw new Error("permission denied");
         }

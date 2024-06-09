@@ -57,11 +57,7 @@ productController.getProduct = async (req, res) => {
 productController.getProductById = async (req, res) => {
     try {
         const productId = req.params.id;
-        // const product = await Product.findById(productId);
         const product = await Product.findById({_id: productId});
-
-        // console.log("productId = ", productId);
-        // console.log("product = ", product);
 
         if (!product) {
             throw new Error("상품을 찾을 수 없습니다.")
